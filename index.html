@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>架空の絵本棚</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5ece0;
+      margin: 0;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #3a2008;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #8a6a4a;
+      margin-bottom: 2rem;
+    }
+    .search-wrap {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    #searchInput {
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 20px;
+      border: 1.5px solid #c9a87a;
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      outline: none;
+    }
+    #count {
+      text-align: center;
+      color: #8a6a4a;
+      font-size: 13px;
+      margin-bottom: 1.5rem;
+    }
+    .shelf {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 6px;
+      background: #b07838;
+      border-left: 12px solid #8a5c28;
+      border-right: 12px solid #8a5c28;
+      padding: 12px 16px 0;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 0 #6a3e10;
+    }
+    .book {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px 3px 3px 2px;
+      cursor: default;
+      transition: transform 0.15s;
+      position: relative;
+      border-left: 3px solid rgba(0,0,0,0.15);
+    }
+    .book:hover {
+      transform: translateY(-10px);
+    }
+    .book span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 10px;
+      padding: 6px 3px;
+      text-align: center;
+      line-height: 1.3;
+      overflow: hidden;
+      max-height: 80px;
+      word-break: break-all;
+    }
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3a2008;
+      color: #fde8c0;
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+      max-width: 180px;
+      white-space: normal;
+      text-align: center;
+    }
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #3a2008;
+    }
+    .book:hover .tooltip {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<h1>架空の絵本棚</h1>
+<p class="subtitle">この世に存在しない、でもたしかにある絵本たち</p>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="タイトルで検索…" oninput="render()" />
+</div>
+<div id="count"></div>
+<div id="shelves"></div>
+
+<script>
+const TITLES = [
+  "ねこはなぜ月をみるのか",
+  "おじいさんの地図には海がない",
+  "くもがわらったひ",
+  "とおくのとおくのだいこんばたけ",
+  "ふゆのはじまりはどこですか",
+  "むしのことばでおやすみなさい",
+  "りんごがひとつ宇宙にある",
+  "てんきのいい火曜日のこと",
+  "はっぱのうえのちいさなうた",
+  "よるのでんしゃにのったきつね"
+];
+
+const COLORS = [
+  ["#c94040","#fde8c0"],["#3a7a5a","#d0f0e0"],["#4a6ab0","#d8e8ff"],
+  ["#b07030","#fde8c0"],["#7a5090","#ead8f8"],["#556b2f","#d4e8b0"],
+  ["#c85050","#fde0e0"],["#2a7a8a","#c8f0f8"],["#8a6030","#f8e8c0"],
+  ["#4a4a90","#d8d8f8"],["#b06020","#fde8c0"],["#208070","#c8f0e8"],
+  ["#a05060","#f8d8e0"],["#505050","#e8e8e8"],["#2a5a90","#c8e0f8"],
+  ["#7a2a2a","#f8d8d8"],["#4a7a30","#d0f0b8"],["#6a3080","#ead8f8"]
+];
+
+function bookStyle(i) {
+  const w = 34 + (i * 7) % 26;
+  const h = 78 + (i * 11) % 26;
+  const [bg, fg] = COLORS[i % COLORS.length];
+  return { w, h, bg, fg };
+}
+
+function render() {
+  const q = document.getElementById('searchInput').value.trim();
+  const list = q ? TITLES.filter(t => t.includes(q)) : [...TITLES];
+  document.getElementById('count').textContent = list.length + ' 冊';
+
+  const PER_ROW = 12;
+  const wrap = document.getElementById('shelves');
+  wrap.innerHTML = '';
+
+  for (let i = 0; i < list.length; i += PER_ROW) {
+    const row = list.slice(i, i + PER_ROW);
+    const shelf = document.createElement('div');
+    shelf.className = 'shelf';
+    row.forEach((title, j) => {
+      const idx = i + j;
+      const s = bookStyle(idx);
+      const book = document.createElement('div');
+      book.className = 'book';
+      book.style.width = s.w + 'px';
+      book.style.height = s.h + 'px';
+      book.style.background = s.bg;
+      book.innerHTML = `<span style="color:${s.fg}">${title}</span><div class="tooltip">${title}</div>`;
+      shelf.appendChild(book);
+    });
+    wrap.appendChild(shelf);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
